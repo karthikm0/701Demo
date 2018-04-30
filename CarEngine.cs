@@ -71,16 +71,27 @@ public class CarEngine : MonoBehaviour {
         sensorStartPos += transform.up * frontSensorPosition.y;
         float avoidMultiplier = 0;
         avoidObstacles = false;
+        pedestrianStatus = false;
 
-        //Front right sensor
+        // Front right sensor
         sensorStartPos += transform.right * frontSideSensorPos;
         if (Physics.Raycast(sensorStartPos, transform.forward, out hit, sensorLength))
         {
             if (hit.collider.CompareTag("Terrain") == false)
-            {
+            {   
                 Debug.DrawLine(sensorStartPos, hit.point);
-                avoidObstacles = true;
-                avoidMultiplier -= 1f;
+                // Pedestrian spotted
+                if (hit.collider.CompareTag("Player") == true)
+                {
+                    pedestrianStatus = true;
+                }
+                // Other obstacle spotted
+                else
+                {
+                    avoidObstacles = true;
+                    avoidMultiplier -= 1f;
+                }
+
             }
         }
 
@@ -90,8 +101,17 @@ public class CarEngine : MonoBehaviour {
             if (hit.collider.CompareTag("Terrain") == false)
             {
                 Debug.DrawLine(sensorStartPos, hit.point);
-                avoidObstacles = true;
-                avoidMultiplier -= 0.5f;
+                // Pedestrian spotted
+                if (hit.collider.CompareTag("Player") == true)
+                {
+                    pedestrianStatus = true;
+                }
+                // Other obstacle spotted
+                else
+                {
+                    avoidObstacles = true;
+                    avoidMultiplier -= 0.5f;
+                }
             }
         }
 
@@ -102,8 +122,17 @@ public class CarEngine : MonoBehaviour {
             if (hit.collider.CompareTag("Terrain") == false)
             {
                 Debug.DrawLine(sensorStartPos, hit.point);
-                avoidObstacles = true;
-                avoidMultiplier += 1f;
+                // Pedestrian spotted
+                if (hit.collider.CompareTag("Player") == true)
+                {
+                    pedestrianStatus = true;
+                }
+                // Other obstacle spotted
+                else
+                {
+                    avoidObstacles = true;
+                    avoidMultiplier += 1f;
+                }
             }
         }
 
@@ -113,8 +142,17 @@ public class CarEngine : MonoBehaviour {
             if (hit.collider.CompareTag("Terrain") == false)
             {
                 Debug.DrawLine(sensorStartPos, hit.point);
-                avoidObstacles = true;
-                avoidMultiplier += 0.5f;
+                // Pedestrian spotted
+                if (hit.collider.CompareTag("Player") == true)
+                {
+                    pedestrianStatus = true;
+                }
+                // Other obstacle spotted
+                else
+                {
+                    avoidObstacles = true;
+                    avoidMultiplier += 0.5f;
+                }
             }
         }
 
@@ -126,23 +164,38 @@ public class CarEngine : MonoBehaviour {
                 if (hit.collider.CompareTag("Terrain") == false)
                 {
                     Debug.DrawLine(sensorStartPos, hit.point);
-                    avoidObstacles = true;
-                    if (hit.normal.x < 0)
+                    // Pedestrian spotted
+                    if (hit.collider.CompareTag("Player") == true)
                     {
-                        avoidMultiplier = -1;
+                        pedestrianStatus = true;
                     }
+                    // Other obstacle spotted
                     else
                     {
-                        avoidMultiplier = 1;
+                        avoidObstacles = true;
+                        if (hit.normal.x < 0)
+                        {
+                            avoidMultiplier = -1;
+                        }
+                        else
+                        {
+                            avoidMultiplier = 1;
+                        }
                     }
                 }
             }
+        }
+
+        if (pedestrianStatus)
+        {
+            brakeStatus = true;
         }
 
         if (avoidObstacles)
         {
             targetSteerAngle = maxSteerAngle * avoidMultiplier;
         }
+
     }
 
     private void ApplySteer()
@@ -200,7 +253,6 @@ public class CarEngine : MonoBehaviour {
             {
                 currentNode++;
             }
-
             //If last node, then apply braking
             else
             {
