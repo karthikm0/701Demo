@@ -23,6 +23,8 @@ public class CarEngine : MonoBehaviour {
     public float currentSpeed;
     public float maxSpeed = 200f;
     public Vector3 centerOfMass;
+    public Vector3 vehicleStartPos;
+    public bool teleportStatus = false;
 
     // brake status
     public bool brakeStatus = false;
@@ -30,7 +32,6 @@ public class CarEngine : MonoBehaviour {
     public Texture2D textureNormal;
     public Texture2D textureBraking;
     public Renderer carRenderer;
-
 
     // vehicle sensors
     [Header("Sensors")]
@@ -42,15 +43,15 @@ public class CarEngine : MonoBehaviour {
     // distance to stop sign & identifying stop sign
     [Header("Stopping")]
     public float distanceToStop = 15f;
-    public GameObject stopSign;
+    public GameObject stopSign = GameObject.Find("stop_sign");
     // vehicle stop sign detection
     public int stopStatus = 0;
     // pedestrian status
     public bool pedestrianStatus = false; // can be any object but for the study, it probably would be a pedestrian
 
-
     // Use this for initialization
     void Start () {
+        stopSign = GameObject.Find("stop_sign");
         GetComponent<Rigidbody>().centerOfMass = centerOfMass;
         Transform[] pathTransforms = path.GetComponentsInChildren<Transform>();
         nodes = new List<Transform>();
@@ -74,8 +75,7 @@ public class CarEngine : MonoBehaviour {
         ApplySteer();
         Drive();
         Brake();
-        MoveCar();
-	}
+    }
 
     // vehicle sensors
     private void Sensors()
@@ -267,24 +267,7 @@ public class CarEngine : MonoBehaviour {
         
     }
 
-    // determine distance to waypoint
-    private void WaypointDistance()
-    {
-        if(Vector3.Distance(transform.position, nodes[currentNode].position) < 5f)
-        {
-            //For nodes that are not the last node
-            if (currentNode != (nodes.Count - 1))
-            {
-                currentNode++;
-            }
-            //If last node, then apply braking
-            else
-            {
-                brakeStatus = true;
-            }
-        }
-    }
-
+    // Check whether to stop the vehicle at stop sign
     private void CheckForStop()
     {   
         float stopTimer = 0f; // time at stop sign
@@ -310,9 +293,25 @@ public class CarEngine : MonoBehaviour {
         }
     }
 
-    private void MoveCar()
+    // determine distance to waypoint
+    private void WaypointDistance()
     {
-
+        if (Vector3.Distance(transform.position, nodes[currentNode].position) < 5f)
+        {
+            // For nodes that are not the last node
+            if (currentNode != (nodes.Count - 1))
+            {
+                currentNode++;
+            }
+            // If last node, then apply braking
+            else
+            {
+                //brakeStatus = true;
+                //teleportStatus = true;
+                currentNode = 0;
+                stopStatus = 0;
+            }
+        }
     }
 
 }
