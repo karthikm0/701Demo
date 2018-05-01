@@ -8,11 +8,13 @@ public class CarEngine : MonoBehaviour {
     private List<Transform> nodes;
     private int currentNode = 0;
 
+    // wheel colliders for vehicle
     public WheelCollider wheelFrontLeft;
     public WheelCollider wheelFrontRight;
     public WheelCollider wheelBackLeft;
     public WheelCollider wheelBackRight;
 
+    // vehicle related
     public float maxSteerAngle = 45f; // car wheels max steering angle
     public float targetSteerAngle = 0f;
     public float turnSpeed = 5f;
@@ -20,25 +22,35 @@ public class CarEngine : MonoBehaviour {
     public float maxBrakeTorque = 150f;
     public float currentSpeed;
     public float maxSpeed = 200f;
-
     public Vector3 centerOfMass;
 
+    // brake status
     public bool brakeStatus = false;
     //public bool avoidObstacles = false;
-    public bool pedestrianStatus = false; // can be any object but for the study, it probably would be a pedestrian
     public Texture2D textureNormal;
     public Texture2D textureBraking;
-
     public Renderer carRenderer;
 
+
+    // vehicle sensors
     [Header("Sensors")]
     public float sensorLength = 15f;
     public Vector3 frontSensorPosition = new Vector3(0f, 0.5f, 1.7f);
     public float frontSideSensorPos = 0.8f; // position of front sensor
     public float frontAngledSensor = 40f; // angle of sensor vision
 
-	// Use this for initialization
-	void Start () {
+    // distance to stop sign & identifying stop sign
+    [Header("Stopping")]
+    public float distanceToStop = 15f;
+    public GameObject stopSign;
+    // vehicle stop sign detection
+    public int stopStatus = 0;
+    // pedestrian status
+    public bool pedestrianStatus = false; // can be any object but for the study, it probably would be a pedestrian
+
+
+    // Use this for initialization
+    void Start () {
         GetComponent<Rigidbody>().centerOfMass = centerOfMass;
         Transform[] pathTransforms = path.GetComponentsInChildren<Transform>();
         nodes = new List<Transform>();
@@ -56,13 +68,16 @@ public class CarEngine : MonoBehaviour {
 	private void FixedUpdate ()
     {
         Sensors();
+        CheckForStop();
         WaypointDistance();
         LerpToSteerAngle();
         ApplySteer();
         Drive();
         Brake();
+        MoveCar();
 	}
 
+    // vehicle sensors
     private void Sensors()
     {
         RaycastHit hit;
@@ -72,6 +87,7 @@ public class CarEngine : MonoBehaviour {
         float avoidMultiplier = 0;
         //avoidObstacles = false;
         pedestrianStatus = false;
+        brakeStatus = false;
 
         // Front right sensor
         sensorStartPos += transform.right * frontSideSensorPos;
@@ -201,6 +217,7 @@ public class CarEngine : MonoBehaviour {
 
     }
 
+    // choosing steering angles
     private void ApplySteer()
     {
         //if (avoidObstacles) return;
@@ -209,6 +226,7 @@ public class CarEngine : MonoBehaviour {
         targetSteerAngle = newSteer;
     }
 
+    // applying motor torque
     private void Drive()
     {
         currentSpeed = 2 * Mathf.PI * wheelFrontLeft.radius * wheelFrontLeft.rpm * 60 / 1000;
@@ -224,12 +242,14 @@ public class CarEngine : MonoBehaviour {
         }
     }
 
+    // smoother turns
     private void LerpToSteerAngle()
     {
         wheelFrontLeft.steerAngle = Mathf.Lerp(wheelFrontLeft.steerAngle, targetSteerAngle, Time.deltaTime * turnSpeed);
         wheelFrontRight.steerAngle = Mathf.Lerp(wheelFrontRight.steerAngle, targetSteerAngle, Time.deltaTime * turnSpeed);
     }
 
+    // braking vehicle
     private void Brake()
     {
         if (brakeStatus)
@@ -247,6 +267,7 @@ public class CarEngine : MonoBehaviour {
         
     }
 
+    // determine distance to waypoint
     private void WaypointDistance()
     {
         if(Vector3.Distance(transform.position, nodes[currentNode].position) < 5f)
@@ -262,6 +283,36 @@ public class CarEngine : MonoBehaviour {
                 brakeStatus = true;
             }
         }
+    }
+
+    private void CheckForStop()
+    {   
+        float stopTimer = 0f; // time at stop sign
+        if ((stopSign.transform.position.z - transform.position.z) < 30f & stopStatus == 0)
+        {
+            stopStatus = 1;
+        }
+
+        // if vehicle has to stop then do these
+        if (stopStatus == 1)
+        {
+            brakeStatus = true;
+            Brake();
+            while (currentSpeed < 0.05 & stopStatus == 1)
+            {  
+                stopTimer += Time.deltaTime;
+                if (stopTimer > 500000)
+                {
+                    stopStatus = 2;
+                    brakeStatus = false;
+                }
+            }
+        }
+    }
+
+    private void MoveCar()
+    {
+
     }
 
 }
