@@ -48,6 +48,7 @@ public class CarEngine : MonoBehaviour {
     public int stopStatus = 0;
     // pedestrian status
     public bool pedestrianStatus = false; // can be any object but for the study, it probably would be a pedestrian
+    public int waitTime = 3; // 3 seconds wait at stop
 
     // Use this for initialization
     void Start () {
@@ -230,7 +231,7 @@ public class CarEngine : MonoBehaviour {
     private void Drive()
     {
         currentSpeed = 2 * Mathf.PI * wheelFrontLeft.radius * wheelFrontLeft.rpm * 60 / 1000;
-        if (currentSpeed < maxSpeed && brakeStatus == false)
+        if (currentSpeed < maxSpeed && brakeStatus == false && stopStatus != 1)
         {
             wheelFrontLeft.motorTorque = maxMotorTorque;
             wheelFrontRight.motorTorque = maxMotorTorque;
@@ -270,8 +271,8 @@ public class CarEngine : MonoBehaviour {
     // Check whether to stop the vehicle at stop sign
     private void CheckForStop()
     {   
-        float stopTimer = 0f; // time at stop sign
-        if ((stopSign.transform.position.z - transform.position.z) < 30f & stopStatus == 0)
+        //float stopTimer = 0f; // time at stop sign
+        if ((stopSign.transform.position.z - transform.position.z) < distanceToStop & stopStatus == 0)
         {
             stopStatus = 1;
         }
@@ -281,15 +282,21 @@ public class CarEngine : MonoBehaviour {
         {
             brakeStatus = true;
             Brake();
-            while (currentSpeed < 0.05 & stopStatus == 1)
-            {  
-                stopTimer += Time.deltaTime;
-                if (stopTimer > 500000)
-                {
-                    stopStatus = 2;
-                    brakeStatus = false;
-                }
+            if (currentSpeed < 0.05 & stopStatus == 1)
+            {
+                StartCoroutine(WaitForSome(waitTime));
+                //stopStatus = 2;
+                //brakeStatus = false;
             }
+            //while (currentSpeed < 0.05 & stopStatus == 1)
+            //{  
+            //    stopTimer += Time.deltaTime;
+            //    if (stopTimer > 500000)
+            //    {
+            //        stopStatus = 2;
+            //        brakeStatus = false;
+            //    }
+            //}
         }
     }
 
@@ -314,4 +321,10 @@ public class CarEngine : MonoBehaviour {
         }
     }
 
+    IEnumerator WaitForSome (int waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+        stopStatus = 2;
+        print("Waited 12 seconds");
+    }
 }

@@ -9,9 +9,10 @@ public class CarGenerator : MonoBehaviour {
     public CarEngine engine;
     private bool CarStatus = false;
 
+
     // Use this for initialization
     void Start() {
-        newCar = Instantiate(carPrefab, new Vector3(102.08f, 0.071f, 67.99f), transform.rotation);
+        newCar = Instantiate(carPrefab, new Vector3(102.08f, 0.3f, 67.99f), transform.rotation);
         CarEngine engine = carPrefab.GetComponent<CarEngine>();
         engine.path = GameObject.Find("Path").transform;
     }
