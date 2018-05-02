@@ -1,6 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 
 public class CarEngine : MonoBehaviour {
 
@@ -52,7 +54,7 @@ public class CarEngine : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-        stopSign = GameObject.Find("stop_sign");
+        //stopSign = GameObject.Find("stop_sign");
         GetComponent<Rigidbody>().centerOfMass = centerOfMass;
         Transform[] pathTransforms = path.GetComponentsInChildren<Transform>();
         nodes = new List<Transform>();
@@ -272,7 +274,7 @@ public class CarEngine : MonoBehaviour {
     private void CheckForStop()
     {   
         //float stopTimer = 0f; // time at stop sign
-        if ((stopSign.transform.position.z - transform.position.z) < distanceToStop & stopStatus == 0)
+        if (Math.Abs(stopSign.transform.position.z - transform.position.z) < distanceToStop & stopStatus == 0)
         {
             stopStatus = 1;
         }
